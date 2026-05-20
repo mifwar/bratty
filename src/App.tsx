@@ -1,6 +1,13 @@
-import { useCallback, useDeferredValue, useEffect, useRef } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { CanvasPreview } from "./components/CanvasPreview";
 import { FloatingInput } from "./components/FloatingInput";
+import { StyleControls } from "./components/StyleControls";
 import { ToastMessage } from "./components/ToastMessage";
 import { Toolbar } from "./components/Toolbar";
 import { useDebouncedPreview } from "./hooks/useDebouncedPreview";
@@ -13,23 +20,31 @@ import {
   downloadPNG,
   renderCanvasBlob,
 } from "./lib/renderCanvas";
-import { buildShareUrl } from "./lib/url";
+import {
+  buildShareUrl,
+  getRenderOptionsFromUrl,
+  setRenderOptionsInUrl,
+} from "./lib/url";
 
 function App() {
   const [text, setText] = useTextQueryParam();
+  const [renderOptions, setRenderOptions] = useState(getRenderOptionsFromUrl);
   const deferredText = useDeferredValue(text);
-  const dataUrl = useDebouncedPreview(deferredText, text);
+  const dataUrl = useDebouncedPreview(deferredText, text, renderOptions);
   const [toast, showToast] = useToastMessage();
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const renderOptionsUrlDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const viewportHeight = useVisualViewportHeight();
 
   const renderCurrentBlob = useCallback(async () => {
-    const blob = await renderCanvasBlob(text);
+    const blob = await renderCanvasBlob(text, undefined, renderOptions);
     if (!blob) {
       showToast("Type something first");
     }
     return blob;
-  }, [showToast, text]);
+  }, [renderOptions, showToast, text]);
 
   const handleCopy = useCallback(async () => {
     const blob = await renderCurrentBlob();
@@ -64,10 +79,10 @@ function App() {
   }, [renderCurrentBlob, showToast, text]);
 
   const handleShareLink = useCallback(async () => {
-    const url = buildShareUrl(text);
+    const url = buildShareUrl(text, renderOptions);
     const ok = await copyTextToClipboard(url);
     showToast(ok ? "Link copied" : "Could not copy link");
-  }, [showToast, text]);
+  }, [renderOptions, showToast, text]);
 
   const handleReset = useCallback(() => {
     setText("");
@@ -90,6 +105,24 @@ function App() {
       }
     }
   }, [renderCurrentBlob, showToast]);
+
+  useEffect(() => {
+    if (renderOptionsUrlDebounceRef.current) {
+      clearTimeout(renderOptionsUrlDebounceRef.current);
+    }
+
+    renderOptionsUrlDebounceRef.current = setTimeout(() => {
+      setRenderOptionsInUrl(renderOptions);
+      renderOptionsUrlDebounceRef.current = null;
+    }, 150);
+
+    return () => {
+      if (renderOptionsUrlDebounceRef.current) {
+        clearTimeout(renderOptionsUrlDebounceRef.current);
+        renderOptionsUrlDebounceRef.current = null;
+      }
+    };
+  }, [renderOptions]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -168,7 +201,21 @@ function App() {
           }
           hasImage={!!text.trim()}
         />
+        <StyleControls value={renderOptions} onChange={setRenderOptions} />
         <FloatingInput inputRef={inputRef} value={text} onChange={setText} />
+        <a
+          href="http://mifwar.com/"
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            color: "#999",
+            fontSize: "11px",
+            fontWeight: 500,
+            textDecoration: "none",
+          }}
+        >
+          made by mifwar
+        </a>
       </div>
 
       {toast && <ToastMessage message={toast} />}

@@ -1,3 +1,15 @@
+import {
+  DEFAULT_RENDER_OPTIONS,
+  type RenderOptions,
+} from "./renderCanvas";
+
+const MIN_PADDING = 32;
+const MAX_PADDING = 160;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
 /**
  * On load: if pathname has content and no ?text= query param,
  * convert pathname to ?text= query param via history.replaceState.
@@ -24,6 +36,17 @@ export function getTextFromUrl(): string {
   return params.get("text") ?? "";
 }
 
+export function getRenderOptionsFromUrl(): RenderOptions {
+  const params = new URLSearchParams(window.location.search);
+  const padding = Number(params.get("pad"));
+
+  return {
+    padding: Number.isFinite(padding)
+      ? clamp(padding, MIN_PADDING, MAX_PADDING)
+      : DEFAULT_RENDER_OPTIONS.padding,
+  };
+}
+
 export function setTextInUrl(text: string): void {
   const params = new URLSearchParams(window.location.search);
   if (text) {
@@ -36,8 +59,26 @@ export function setTextInUrl(text: string): void {
   window.history.replaceState(null, "", newUrl);
 }
 
-export function buildShareUrl(text: string): string {
+export function setRenderOptionsInUrl(options: RenderOptions): void {
+  const params = new URLSearchParams(window.location.search);
+
+  if (options.padding === DEFAULT_RENDER_OPTIONS.padding) {
+    params.delete("pad");
+  } else {
+    params.set("pad", String(options.padding));
+  }
+  params.delete("size");
+
+  const newSearch = params.toString();
+  const newUrl = newSearch ? `/?${newSearch}` : "/";
+  window.history.replaceState(null, "", newUrl);
+}
+
+export function buildShareUrl(text: string, options: RenderOptions): string {
   const url = new URL(window.location.origin);
   url.searchParams.set("text", text);
+  if (options.padding !== DEFAULT_RENDER_OPTIONS.padding) {
+    url.searchParams.set("pad", String(options.padding));
+  }
   return url.toString();
 }

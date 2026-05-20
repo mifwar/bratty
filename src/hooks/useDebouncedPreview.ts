@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { renderCanvasPreview } from "../lib/renderCanvas";
+import { renderCanvasPreview, type RenderOptions } from "../lib/renderCanvas";
 
 interface PreviewState {
   text: string;
@@ -9,6 +9,7 @@ interface PreviewState {
 export function useDebouncedPreview(
   renderText: string,
   liveText: string,
+  renderOptions: RenderOptions,
 ): string | null {
   const [preview, setPreview] = useState<PreviewState>({
     text: "",
@@ -27,7 +28,7 @@ export function useDebouncedPreview(
     timeoutRef.current = setTimeout(() => {
       setPreview({
         text: renderText,
-        dataUrl: renderCanvasPreview(renderText),
+        dataUrl: renderCanvasPreview(renderText, renderOptions),
       });
       timeoutRef.current = null;
     }, 50);
@@ -38,7 +39,7 @@ export function useDebouncedPreview(
         timeoutRef.current = null;
       }
     };
-  }, [renderText]);
+  }, [renderOptions, renderText]);
 
   if (!liveText.trim()) return null;
   return preview.dataUrl;
