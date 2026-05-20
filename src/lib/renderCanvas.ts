@@ -1,6 +1,8 @@
 import { wrapText } from "./wrapText";
 
 const CANVAS_SIZE = 1024;
+const PREVIEW_CANVAS_SIZE = 512;
+const EXPORT_CANVAS_SIZE = 2048;
 const MIN_FONT_SIZE = 20;
 const MAX_FONT_SIZE = 180;
 export const DEFAULT_PADDING = 72;
@@ -150,18 +152,22 @@ export function renderCanvasPreview(
   text: string,
   renderOptions: RenderOptions = DEFAULT_RENDER_OPTIONS,
 ): string | null {
-  const canvas = drawCanvas(text, { size: 512, pixelRatio: 1, renderOptions });
+  const canvas = drawCanvas(text, {
+    size: PREVIEW_CANVAS_SIZE,
+    pixelRatio: 1,
+    renderOptions,
+  });
   return canvas?.toDataURL("image/png") ?? null;
 }
 
 export function renderCanvas(
   text: string,
-  size: number = CANVAS_SIZE,
+  size: number = EXPORT_CANVAS_SIZE,
   renderOptions: RenderOptions = DEFAULT_RENDER_OPTIONS,
 ): RenderResult | null {
   const canvas = drawCanvas(text, {
-    size,
-    pixelRatio: window.devicePixelRatio || 1,
+    size: PREVIEW_CANVAS_SIZE,
+    pixelRatio: size / PREVIEW_CANVAS_SIZE,
     renderOptions,
   });
   if (!canvas) return null;
@@ -182,12 +188,12 @@ export function renderCanvas(
 
 export async function renderCanvasBlob(
   text: string,
-  size: number = CANVAS_SIZE,
+  size: number = EXPORT_CANVAS_SIZE,
   renderOptions: RenderOptions = DEFAULT_RENDER_OPTIONS,
 ): Promise<Blob | null> {
   const canvas = drawCanvas(text, {
-    size,
-    pixelRatio: window.devicePixelRatio || 1,
+    size: PREVIEW_CANVAS_SIZE,
+    pixelRatio: size / PREVIEW_CANVAS_SIZE,
     renderOptions,
   });
   if (!canvas) return null;
