@@ -14,6 +14,7 @@ import { useDebouncedPreview } from "./hooks/useDebouncedPreview";
 import { useTextQueryParam } from "./hooks/useTextQueryParam";
 import { useToastMessage } from "./hooks/useToastMessage";
 import { useVisualViewportHeight } from "./hooks/useVisualViewportHeight";
+import { trackEvent } from "./lib/analytics";
 import { copyTextToClipboard } from "./lib/clipboard";
 import {
   copyImageToClipboard,
@@ -75,8 +76,12 @@ function App() {
       .replace(/[^a-zA-Z0-9]/g, "-");
 
     downloadPNG(blob, `brat-${safeText || "text"}.png`);
+    trackEvent("download_image", {
+      padding: renderOptions.padding,
+      text_length: text.trim().length,
+    });
     showToast("Downloaded");
-  }, [renderCurrentBlob, showToast, text]);
+  }, [renderCurrentBlob, renderOptions.padding, showToast, text]);
 
   const handleShareLink = useCallback(async () => {
     const url = buildShareUrl(text, renderOptions);

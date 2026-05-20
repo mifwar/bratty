@@ -2,6 +2,13 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Analytics
+
+Set `VITE_GA_MEASUREMENT_ID` to enable GA4. Without it, analytics stays off.
+
+GA4 page views provide unique-visit estimates. The app also sends one custom
+event, `download_image`, when someone downloads a generated PNG.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
