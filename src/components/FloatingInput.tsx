@@ -48,12 +48,6 @@ export function FloatingInput({
           boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
           color: "#111",
         }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            onChange(value + "\n");
-          }
-        }}
       />
     </div>
   );
